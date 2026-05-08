@@ -54,15 +54,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* Survey breakdown */
 .survey-section{margin-top:1.5rem}
-.survey-section h2{font-size:1.1rem;font-weight:600;margin-bottom:1rem}
-.survey-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem}
-.survey-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:1.2rem 1.5rem}
-.survey-card h4{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:.8rem}
-.survey-bar-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;font-size:.75rem}
-.survey-bar-label{flex:0 0 160px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.survey-bar-track{flex:1;height:18px;background:rgba(0,0,0,.04);border-radius:4px;overflow:hidden}
-.survey-bar-fill{height:100%;background:var(--amber);border-radius:4px;transition:width .6s ease}
-.survey-bar-count{flex:0 0 30px;text-align:right;color:var(--muted);font-size:.7rem}
+.survey-section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+.survey-section-head h2{font-size:1.15rem;font-weight:600}
+.survey-section-meta{font-size:.8rem;color:var(--muted)}
+.survey-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:1.2rem}
+.survey-card{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:1.4rem 1.6rem}
+.survey-card-head{display:flex;justify-content:space-between;align-items:baseline;gap:.8rem;margin-bottom:1rem;padding-bottom:.7rem;border-bottom:1px solid rgba(0,0,0,.06)}
+.survey-card h4{font-size:.92rem;font-weight:600;color:var(--text);letter-spacing:0;text-transform:none}
+.survey-card-n{font-size:.72rem;color:var(--muted);white-space:nowrap}
+.survey-bar-row{display:block;margin-bottom:.85rem}
+.survey-bar-row:last-child{margin-bottom:.2rem}
+.survey-bar-head{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;margin-bottom:.3rem;font-size:.88rem}
+.survey-bar-label{color:var(--text);line-height:1.35;flex:1;min-width:0;word-break:break-word}
+.survey-bar-stat{color:var(--muted);font-size:.82rem;font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0}
+.survey-bar-stat strong{color:var(--text);font-weight:600}
+.survey-bar-track{height:10px;background:rgba(0,0,0,.05);border-radius:5px;overflow:hidden}
+.survey-bar-fill{height:100%;background:var(--amber);border-radius:5px;transition:width .6s ease}
 
 /* Loading */
 .loading{text-align:center;padding:3rem;color:var(--muted);font-size:.85rem}
@@ -76,7 +83,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     .charts-grid{grid-template-columns:1fr}
     .card-hero .card-value{font-size:2.2rem}
     .header h1{font-size:1.4rem}
-    .survey-bar-label{flex:0 0 120px}
+    .survey-grid{grid-template-columns:1fr}
+    .survey-card{padding:1.2rem 1.3rem}
+    .survey-bar-head{font-size:.85rem}
 }
 </style>
 </head>
@@ -144,7 +153,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 <!-- Survey breakdown -->
 <div class="survey-section">
-    <h2>Survey Responses</h2>
+    <div class="survey-section-head">
+        <h2>Survey Responses</h2>
+        <div class="survey-section-meta" id="surveyMeta"></div>
+    </div>
     <div class="survey-grid" id="surveyGrid">
         <div class="loading"><span class="spinner"></span> Loading survey data...</div>
     </div>
@@ -289,11 +301,11 @@ async function loadData() {
         scales: {
             x: {
                 grid: { display: false },
-                ticks: { color: chartColors.tick, font: { size: 10, family: 'Poppins' }, maxRotation: 45 }
+                ticks: { color: chartColors.tick, font: { size: 12, family: 'Poppins' }, maxRotation: 45 }
             },
             y: {
                 grid: { color: chartColors.grid },
-                ticks: { color: chartColors.tick, font: { size: 10, family: 'Poppins' } },
+                ticks: { color: chartColors.tick, font: { size: 12, family: 'Poppins' } },
                 beginAtZero: true
             }
         }
@@ -340,27 +352,35 @@ async function loadData() {
 
 function buildSurveyBreakdown(rows) {
     const grid = document.getElementById('surveyGrid');
+    const meta = document.getElementById('surveyMeta');
     const surveyRows = rows.filter(r => r.survey_responses && Object.keys(r.survey_responses).length > 0);
 
     if (surveyRows.length === 0) {
+        meta.textContent = '';
         grid.innerHTML = '<div class="loading">No survey responses yet.</div>';
         return;
     }
 
     const questionLabels = {
-        travel_frequency: 'Travel Frequency',
-        planning_pain: 'Planning Pain Points',
-        recommendation_source: 'Recommendation Sources',
-        ai_planning: 'AI Planning Usage',
-        social_save: 'Social Content Behavior'
+        travel_frequency: 'How often do you travel?',
+        planning_pain: 'What\'s the hardest part about planning a trip?',
+        recommendation_source: 'Where do you usually get travel recommendations?',
+        ai_planning: 'Have you used AI to plan a trip?',
+        social_save: 'When you see great travel content, what do you do?'
     };
+    const multiSelectQuestions = new Set(['planning_pain', 'recommendation_source']);
 
+    // counts[question][option] = count of respondents who picked it
+    // respondents[question] = number of respondents who answered this question
     const counts = {};
+    const respondents = {};
     surveyRows.forEach(r => {
         const sr = r.survey_responses;
         Object.keys(sr).forEach(key => {
-            if (!counts[key]) counts[key] = {};
             const val = sr[key];
+            if (val == null || (Array.isArray(val) && val.length === 0)) return;
+            if (!counts[key]) counts[key] = {};
+            respondents[key] = (respondents[key] || 0) + 1;
             if (Array.isArray(val)) {
                 val.forEach(v => { counts[key][v] = (counts[key][v] || 0) + 1; });
             } else {
@@ -369,18 +389,32 @@ function buildSurveyBreakdown(rows) {
         });
     });
 
+    meta.textContent = surveyRows.length.toLocaleString() + ' respondent' + (surveyRows.length === 1 ? '' : 's');
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+
     let html = '';
     Object.keys(questionLabels).forEach(key => {
         if (!counts[key]) return;
+        const n = respondents[key] || 1;
         const entries = Object.entries(counts[key]).sort((a, b) => b[1] - a[1]);
-        const max = entries[0] ? entries[0][1] : 1;
-        html += '<div class="survey-card"><h4>' + questionLabels[key] + '</h4>';
+        const isMulti = multiSelectQuestions.has(key);
+        const cardSubtitle = isMulti ? 'n=' + n + ' · multi-select' : 'n=' + n;
+        html += '<div class="survey-card">' +
+            '<div class="survey-card-head"><h4>' + escapeHtml(questionLabels[key]) + '</h4>' +
+            '<span class="survey-card-n">' + cardSubtitle + '</span></div>';
         entries.forEach(([label, count]) => {
-            const pct = Math.round((count / max) * 100);
+            const pct = Math.round((count / n) * 100);
+            const barWidth = Math.min(100, pct);
             html += '<div class="survey-bar-row">' +
-                '<span class="survey-bar-label" title="' + label + '">' + label + '</span>' +
-                '<div class="survey-bar-track"><div class="survey-bar-fill" style="width:' + pct + '%"></div></div>' +
-                '<span class="survey-bar-count">' + count + '</span></div>';
+                '<div class="survey-bar-head">' +
+                    '<span class="survey-bar-label">' + escapeHtml(label) + '</span>' +
+                    '<span class="survey-bar-stat"><strong>' + pct + '%</strong> · ' + count + '</span>' +
+                '</div>' +
+                '<div class="survey-bar-track"><div class="survey-bar-fill" style="width:' + barWidth + '%"></div></div>' +
+                '</div>';
         });
         html += '</div>';
     });
