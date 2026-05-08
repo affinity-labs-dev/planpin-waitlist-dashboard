@@ -87,9 +87,70 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     .survey-card{padding:1.2rem 1.3rem}
     .survey-bar-head{font-size:.85rem}
 }
+
+/* === Password gate === */
+#passwordGate{position:fixed;inset:0;z-index:9999;background:#0D0D0D;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;font-family:'Poppins',sans-serif}
+#passwordGate.hidden{display:none}
+#passwordGate .pw-brand{font-family:'Poppins',sans-serif;color:#FFC752;font-weight:700;font-size:1.4rem;letter-spacing:.02em;margin-bottom:.5rem}
+#passwordGate form{display:flex;flex-direction:column;align-items:center;gap:.75rem}
+#passwordGate .pw-field{position:relative;width:260px}
+#passwordGate input{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:.7rem 1.2rem;color:#FAFAFA;font-family:'Poppins',sans-serif;font-size:.95rem;width:100%;text-align:center;outline:none;transition:border-color .2s ease}
+#passwordGate input:focus{border-color:#FFC752}
+#passwordGate input::placeholder{color:rgba(255,255,255,.3)}
+#passwordGate button{background:#FFC752;color:#0D0D0D;border:none;border-radius:8px;padding:.65rem 2.5rem;font-family:'Poppins',sans-serif;font-size:.85rem;font-weight:600;cursor:pointer;transition:opacity .2s ease}
+#passwordGate button:hover{opacity:.85}
+#passwordGate .pw-error{color:#ff6b6b;font-size:.8rem;height:1.2em}
+#dashboardContent{display:none}
+#dashboardContent.unlocked{display:block}
+
+/* === Tabs === */
+.tabs{display:inline-flex;background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:4px;gap:2px;margin-bottom:1.5rem}
+.tab-btn{background:transparent;border:none;padding:.5rem 1.1rem;font-family:var(--font);font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;border-radius:7px;transition:background .15s,color .15s}
+.tab-btn.active{background:var(--amber);color:#fff;font-weight:600}
+.tab-btn:not(.active):hover{color:var(--text)}
+.view{display:none}
+.view.active{display:block}
+
+/* === Support view === */
+.support-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.2rem}
+.support-filters{display:flex;gap:.5rem;flex-wrap:wrap}
+.filter-chip{background:var(--card);border:1px solid var(--card-border);border-radius:99px;padding:.4rem .9rem;font-family:var(--font);font-size:.78rem;font-weight:500;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s;display:inline-flex;align-items:center;gap:.4rem}
+.filter-chip:hover{border-color:var(--amber)}
+.filter-chip.active{background:var(--amber);border-color:var(--amber);color:#fff}
+.filter-chip-count{font-size:.7rem;opacity:.7;font-variant-numeric:tabular-nums}
+.support-empty{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:3rem;text-align:center;color:var(--muted);font-size:.9rem}
+.support-list{display:flex;flex-direction:column;gap:.9rem}
+.support-row{background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:1.2rem 1.4rem;transition:border-color .15s}
+.support-row[data-status="resolved"]{opacity:.6}
+.support-row-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;margin-bottom:.7rem;flex-wrap:wrap}
+.support-row-meta{display:flex;flex-direction:column;gap:.2rem;min-width:0;flex:1}
+.support-row-top{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.support-row-name{font-weight:600;font-size:.95rem}
+.support-row-email{font-size:.82rem;color:var(--muted)}
+.support-row-email a{color:inherit;text-decoration:none}
+.support-row-email a:hover{color:var(--amber-dark);text-decoration:underline}
+.support-row-time{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.category-badge{display:inline-block;background:var(--amber-light);color:var(--amber-dark);border-radius:99px;padding:.18rem .65rem;font-size:.7rem;font-weight:600;letter-spacing:.01em}
+.status-select{background:var(--bg);border:1px solid var(--card-border);border-radius:8px;padding:.4rem .7rem;font-family:var(--font);font-size:.78rem;color:var(--text);cursor:pointer;outline:none;font-weight:500}
+.status-select:focus{border-color:var(--amber)}
+.support-row-msg{font-size:.88rem;line-height:1.55;color:rgba(0,0,0,.78);white-space:pre-wrap;word-break:break-word;margin-top:.2rem}
 </style>
 </head>
 <body>
+
+<!-- Password gate -->
+<div id="passwordGate">
+    <div class="pw-brand">planpin</div>
+    <form id="pwForm">
+        <div class="pw-field">
+            <input type="password" id="pwInput" placeholder="Enter password" autocomplete="off" autofocus>
+        </div>
+        <button type="submit">Enter</button>
+        <div class="pw-error" id="pwError"></div>
+    </form>
+</div>
+
+<div id="dashboardContent">
 
 <div class="header">
     <div class="header-left">
@@ -101,6 +162,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <span class="last-refresh" id="lastRefresh"></span>
     </div>
 </div>
+
+<!-- Tabs -->
+<div class="tabs" role="tablist">
+    <button class="tab-btn active" data-view="waitlist" role="tab">Waitlist</button>
+    <button class="tab-btn" data-view="support" role="tab">Support <span id="tabSupportCount" style="font-weight:500;opacity:.7"></span></button>
+</div>
+
+<!-- WAITLIST VIEW -->
+<div class="view active" id="view-waitlist">
 
 <!-- Hero metric -->
 <div class="metrics metrics-hero">
@@ -162,14 +232,65 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 </div>
 
+</div><!-- /view-waitlist -->
+
+<!-- SUPPORT VIEW -->
+<div class="view" id="view-support">
+    <div class="support-toolbar">
+        <div class="support-filters" id="supportFilters">
+            <button class="filter-chip active" data-filter="all">All <span class="filter-chip-count" id="cnt-all">0</span></button>
+            <button class="filter-chip" data-filter="pending">Pending <span class="filter-chip-count" id="cnt-pending">0</span></button>
+            <button class="filter-chip" data-filter="in_progress">In progress <span class="filter-chip-count" id="cnt-in_progress">0</span></button>
+            <button class="filter-chip" data-filter="resolved">Resolved <span class="filter-chip-count" id="cnt-resolved">0</span></button>
+        </div>
+    </div>
+    <div id="supportList">
+        <div class="loading"><span class="spinner"></span> Loading support requests…</div>
+    </div>
+</div>
+
+</div><!-- /dashboardContent -->
+
 <script>
 const SUPABASE_URL = 'https://jszwnlyrvpuiiifdqtyn.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzendubHlydnB1aWlpZmRxdHluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3MjQ3MDIsImV4cCI6MjA5MTMwMDcwMn0.E24UDFVtjZAisLyybTKoOlZwFokenTxyw1hcAPgJ1Wk';
+
+const ADMIN_PASS = 'affinitylabs2026';
 
 const headers = {
     'apikey': SUPABASE_KEY,
     'Authorization': 'Bearer ' + SUPABASE_KEY
 };
+
+/* === Password gate === */
+(function () {
+    const gate = document.getElementById('passwordGate');
+    const dash = document.getElementById('dashboardContent');
+    const form = document.getElementById('pwForm');
+    const input = document.getElementById('pwInput');
+    const error = document.getElementById('pwError');
+
+    if (sessionStorage.getItem('pp_dash_unlocked') === '1') {
+        gate.classList.add('hidden');
+        dash.classList.add('unlocked');
+        return;
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value === ADMIN_PASS) {
+            sessionStorage.setItem('pp_dash_unlocked', '1');
+            gate.classList.add('hidden');
+            dash.classList.add('unlocked');
+            error.textContent = '';
+            initialise();
+        } else {
+            error.textContent = 'Incorrect password';
+            input.value = '';
+            input.focus();
+        }
+    });
+})();
 
 let dailyChart = null;
 let cumulativeChart = null;
@@ -422,11 +543,143 @@ function buildSurveyBreakdown(rows) {
     grid.innerHTML = html;
 }
 
-// Initial load
-loadData();
+/* === Tabs + Support view === */
+let supportRequests = [];
+let supportFilter = 'all';
 
-// Auto-refresh every 60 seconds
-setInterval(loadData, 60000);
+function setView(view) {
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+    if (view === 'support') {
+        history.replaceState(null, '', '#support');
+    } else {
+        history.replaceState(null, '', window.location.pathname);
+    }
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => setView(btn.dataset.view));
+});
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        supportFilter = chip.dataset.filter;
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c === chip));
+        renderSupport();
+    });
+});
+
+async function loadSupport() {
+    try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/support_requests?select=*&order=created_at.desc', { headers });
+        if (!res.ok) {
+            // Table likely doesn't exist yet — show empty state.
+            supportRequests = [];
+        } else {
+            supportRequests = await res.json();
+        }
+    } catch (e) {
+        supportRequests = [];
+    }
+    renderSupport();
+}
+
+function renderSupport() {
+    const list = document.getElementById('supportList');
+    const all = supportRequests;
+    const counts = {
+        all: all.length,
+        pending: all.filter(r => r.status === 'pending').length,
+        in_progress: all.filter(r => r.status === 'in_progress').length,
+        resolved: all.filter(r => r.status === 'resolved').length
+    };
+    document.getElementById('cnt-all').textContent = counts.all;
+    document.getElementById('cnt-pending').textContent = counts.pending;
+    document.getElementById('cnt-in_progress').textContent = counts.in_progress;
+    document.getElementById('cnt-resolved').textContent = counts.resolved;
+    document.getElementById('tabSupportCount').textContent = counts.pending > 0 ? '(' + counts.pending + ')' : '';
+
+    const filtered = supportFilter === 'all' ? all : all.filter(r => r.status === supportFilter);
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<div class="support-empty">' + (all.length === 0 ? 'No support requests yet.' : 'No requests match this filter.') + '</div>';
+        return;
+    }
+
+    list.innerHTML = '<div class="support-list">' + filtered.map(rowHtml).join('') + '</div>';
+    list.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', e => updateStatus(parseInt(sel.dataset.id, 10), e.target.value));
+    });
+}
+
+function rowHtml(r) {
+    return '<div class="support-row" data-status="' + esc(r.status) + '">' +
+        '<div class="support-row-head">' +
+            '<div class="support-row-meta">' +
+                '<div class="support-row-top">' +
+                    '<span class="category-badge">' + esc(r.category) + '</span>' +
+                    '<span class="support-row-name">' + esc(r.name) + '</span>' +
+                    '<span class="support-row-email">&lt;<a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>&gt;</span>' +
+                '</div>' +
+                '<div class="support-row-time">' + relativeTime(r.created_at) + ' · ' + new Date(r.created_at).toLocaleString() + '</div>' +
+            '</div>' +
+            '<select class="status-select" data-id="' + r.id + '">' +
+                statusOpt('pending', r.status) +
+                statusOpt('in_progress', r.status) +
+                statusOpt('resolved', r.status) +
+            '</select>' +
+        '</div>' +
+        '<div class="support-row-msg">' + esc(r.message) + '</div>' +
+    '</div>';
+}
+
+function statusOpt(value, current) {
+    const labels = { pending: 'Pending', in_progress: 'In progress', resolved: 'Resolved' };
+    return '<option value="' + value + '"' + (current === value ? ' selected' : '') + '>' + labels[value] + '</option>';
+}
+
+async function updateStatus(id, newStatus) {
+    const row = supportRequests.find(r => r.id === id);
+    if (row) row.status = newStatus;
+    renderSupport();
+    try {
+        const res = await fetch(SUPABASE_URL + '/rest/v1/support_requests?id=eq.' + id, {
+            method: 'PATCH',
+            headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+    } catch (e) {
+        alert('Failed to update status — please refresh and try again.');
+        loadSupport();
+    }
+}
+
+function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+
+function relativeTime(iso) {
+    const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 86400 * 30) return Math.floor(diff / 86400) + 'd ago';
+    return new Date(iso).toLocaleDateString();
+}
+
+function initialise() {
+    loadData();
+    loadSupport();
+    setInterval(loadData, 60000);
+    setInterval(loadSupport, 30000);
+    // Honour #support hash from Slack notification links
+    if (window.location.hash === '#support') setView('support');
+}
+
+if (document.getElementById('dashboardContent').classList.contains('unlocked')) {
+    initialise();
+}
 </script>
 </body>
 </html>
